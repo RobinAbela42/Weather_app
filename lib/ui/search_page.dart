@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/models/location.dart';
 import 'package:weather_app/services/openweathermap_api.dart';
+import 'package:weather_app/ui/weather_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -11,7 +14,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   String query = '';
-
+  Future<Iterable<Location>>? locationsSearchResults;
   @override
   Widget build(BuildContext context) {
     final openWeatherMapApi = context.read<OpenWeatherMapApi>();
@@ -28,13 +31,19 @@ class _SearchPageState extends State<SearchPage> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                openWeatherMapApi.searchLocations(query);
+                if (query.isEmpty) {
+                  const Text('Saisissez une ville dans la barre de recherche.');
+                } else {
+                  locationsSearchResults = openWeatherMapApi.searchLocations(
+                    query,
+                  );
+                }
               });
             },
             child: Text("Rechercher"),
           ),
           FutureBuilder(
-            future: openWeatherMapApi.searchLocations(query),
+            future: locationsSearchResults,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
@@ -56,6 +65,19 @@ class _SearchPageState extends State<SearchPage> {
                       subtitle: Text(
                         "${location.lat} lat, ${location.lon} lon",
                       ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder:
+                                (BuildContext context) => WeatherPage(
+                                  locationName: location.name,
+                                  latitude: location.lat,
+                                  longitude: location.lon,
+                                ),
+                          ),
+                        );
+                      },
                     ),
                 ],
               );

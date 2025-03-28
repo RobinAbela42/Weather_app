@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../models/location.dart';
+import '../ui/weather.dart';
 
 class OpenWeatherMapApi {
   OpenWeatherMapApi({
@@ -35,9 +36,24 @@ class OpenWeatherMapApi {
         (e) => Location.fromJson(e),
       );
     }
-
     throw Exception(
       'Impossible de récupérer les données de localisation (HTTP ${response.statusCode})',
     );
+  }
+
+  Future<Map<String, dynamic>> getWeather(double lat, double lon) async {
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/data/2.5/weather?appid=$apiKey&lat=$lat&lon=$lon&units=$units&lang=$lang',
+      ),
+    );
+
+    if (response.statusCode == HttpStatus.ok) 
+    {
+      return (json.decode(response.body) as Map<String, dynamic>);
+    }
+
+    throw Exception(
+        'Impossible de récupérer les données météo (HTTP ${response.statusCode})');
   }
 }
